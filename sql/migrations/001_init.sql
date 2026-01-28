@@ -19,16 +19,26 @@ CREATE TABLE IF NOT EXISTS posts (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   title       text NOT NULL,
-  body        text NOT NULL,
+  body        jsonb NOT NULL,
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS comments (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   post_id     uuid NOT NULL REFERENCES posts(id) ON DELETE CASCADE,
-  body        text NOT NULL,
+  body        jsonb NOT NULL,
   created_at  timestamptz NOT NULL DEFAULT now()
 );
+
+-- If tables already existed with body as text, convert safely to jsonb.
+-- This wraps existing text values as JSON strings (e.g. "hello"), which is always valid.
+ALTER TABLE posts
+  ALTER COLUMN body TYPE jsonb
+  USING to_jsonb(body);
+
+ALTER TABLE comments
+  ALTER COLUMN body TYPE jsonb
+  USING to_jsonb(body);
 
 -- Notification helper: emit a JSON payload in the shape your Go code expects.
 CREATE OR REPLACE FUNCTION notify_event(ev_type text, ev_id text, ev_data jsonb DEFAULT NULL)

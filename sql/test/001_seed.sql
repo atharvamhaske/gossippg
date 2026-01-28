@@ -13,14 +13,14 @@ WITH u AS (
   SELECT id FROM users WHERE email = 'alice@example.com' LIMIT 1
 )
 INSERT INTO posts (user_id, title, body)
-SELECT u.id, 'Hello World', 'First post body'
+SELECT u.id, 'Hello World', jsonb_build_object('text', 'First post body')
 FROM u;
 
 WITH u AS (
   SELECT id FROM users WHERE email = 'alice@example.com' LIMIT 1
 )
 INSERT INTO posts (user_id, title, body)
-SELECT u.id, 'Another Post', 'Second post body'
+SELECT u.id, 'Another Post', jsonb_build_object('text', 'Second post body')
 FROM u;
 
 -- Comment on the newest post
@@ -28,7 +28,7 @@ WITH p AS (
   SELECT id FROM posts ORDER BY created_at DESC LIMIT 1
 )
 INSERT INTO comments (post_id, body)
-SELECT p.id, 'Nice post!'
+SELECT p.id, jsonb_build_object('text', 'Nice post!')
 FROM p;
 
 COMMIT;

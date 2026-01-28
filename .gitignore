@@ -1,0 +1,19 @@
+# Local env (keep secrets out of git)
+.env
+
+# Go build artifacts
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+*.prof
+
+# Common build/output dirs
+bin/
+dist/
+build/
+
+
+
