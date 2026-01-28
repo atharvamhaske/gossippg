@@ -5,6 +5,9 @@
 
 BEGIN;
 
+-- Needed for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- A few arbitrary tables
 CREATE TABLE IF NOT EXISTS users (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
