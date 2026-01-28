@@ -2,11 +2,11 @@
 
 > A tiny Go implementation listener for Postgres `LISTEN/NOTIFY`, which decodes JSON payloads and dispatches them to a handler and we can consume them from any client using that JSON payloads.
 
-----
-
 ## Overview
 
 This project connects to Postgres, `LISTEN`s on a channel (default: `events`), and processes notifications whose payload is JSON:
+
+![Listener architecture](./test.png)
 
 ## How It Works
 
@@ -29,6 +29,43 @@ sequenceDiagram
     PG-->>App: NOTIFY events, '<json text>'
     App->>App: json.Unmarshal(payload) -> Event
     App->>App: handler(ctx, Event)
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+  subgraph Dev["Local Dev Environment"]
+    CLI["CLI / Makefile<br/>make run · make sql-all"]
+    App["Go Listener Service<br/>cmd/main.go"]
+  end
+
+  subgraph PG["Postgres (docker-compose)"]
+    DB["DB Schema<br/>sql/migrations"]
+    Triggers["NOTIFY Triggers<br/>notify_event + *_notify_insert"]
+    Channel["Channel: events<br/>LISTEN / NOTIFY"]
+  end
+
+  CLI -->|migrate · seed · notify<br/>make migrate / make sql-all| DB
+  DB -->|INSERT fires| Triggers
+  Triggers -->|pg_notify channel with JSON-as-text| Channel
+
+  App -->|CONNECT via DATABASE_URL| PG
+  App -->|LISTEN events| Channel
+  Channel -->|NOTIFY events with JSON payload| App
+
+  App -->|json.Unmarshal -> Event<br/>data kept as raw JSON| App
+  App -->|handler.Log prints JSON payload| CLI
+
+  classDef appNode fill:#e3fcec,stroke:#2e7d32,stroke-width:1px,color:#1b5e20;
+  classDef pgNode fill:#e3f2fd,stroke:#1565c0,stroke-width:1px,color:#0d47a1;
+  classDef cliNode fill:#fff3e0,stroke:#ef6c00,stroke-width:1px,color:#e65100;
+  classDef channelNode fill:#f3e5f5,stroke:#8e24aa,stroke-width:1px,color:#4a148c;
+
+  class App appNode
+  class DB,Triggers pgNode
+  class CLI cliNode
+  class Channel channelNode
 ```
 
 ## Setup (Recommended)
